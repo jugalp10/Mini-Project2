@@ -1,4 +1,5 @@
 import pymongo
+import re
 from clear import *
 
 #
@@ -9,7 +10,7 @@ from clear import *
 # are extracted from the MongoDB collection dblp. Once the user is done viewing the
 # article the user is returned to the main screen.
 # @param  index   an index giving the index position of the article in mydocs.
-# @param  mydocs  a list containing all articles.
+# @param  mydocs  a list containing all articles returned after the query.
 # @param  dblp    the dblp collection created when loading the program.
 # @return
 #
@@ -66,6 +67,31 @@ f"""
     else:
         return
 
+
+def selectAuthor(index, myAuthors, dblp):
+    clear()
+    numAuthors = len(myAuthors)
+    if index.isdigit():
+        index = int(index)
+        if index >= 0 and index < numAuthors:
+            query = {"authors": {"$regex": f"^{myAuthors[index]}$", "$options": "i"}}
+            listOfArticles = []
+            for doc in dblp.find(query):
+                listOfArticles.append(doc)
+            clear()
+            listOfArticles.sort(key=lambda x: x.get("year"), reverse=True)
+            horizontal_line()
+            for article in listOfArticles:
+                title = article["title"] if "title" in article else ""
+                year = article["year"] if "year" in article else ""
+                venue = article["venue"] if "venue" in article else ""
+                print(f"{title} | {year} | {venue}")
+                horizontal_line()
+            input("Press ENTER to continue: ")
+    else:
+        return
+
+
 #
 # This function creates a prompt that displays the operations that the
 # user can perform. The user will then provide an integer between 1
@@ -76,6 +102,7 @@ f"""
 def userInterface():
     while True:
         clear()
+        horizontal_line()
         print(
 """(1) Search for articles
 (2) Search for authors
@@ -110,6 +137,7 @@ def userInterface():
 #
 def searchForArticles(dblp):
     clear()
+    horizontal_line()
     print("Type in your keywords separated by a space here.")
     keywords = [(int(row) if row.isdigit() else row) for row in input("Keywords: ").split()]
     if len(keywords) <= 0:
@@ -136,6 +164,7 @@ def searchForArticles(dblp):
     for x in dblp.find(query):
         mydocs.append(x)
     clear()
+    horizontal_line()
     print("index: id | title | year | venue")
     horizontal_line()
     for i, x in enumerate(mydocs):
@@ -155,8 +184,36 @@ Main Screen: ENTER""")
 
 def searchForAuthors(dblp):
     clear()
+    horizontal_line()
     print("Type in a keyword.")
     keyword = input("Keyword: ")
+    query = {
+        "authors": {"$regex": f"^.*{keyword}.*$", "$options": "i"}
+    }
+    mydocs = []
+    numPublications = {}  # This dictionary stores the number of publications by each author
+    authors = []
+    # that gets returned from the MongoDB database.
+    for x in dblp.find(query, {"authors": 1, "_id": 0}):
+        mydocs.append(x)
+    clear()
+    pattern = re.compile(f"(?i)^.*{keyword}.*$")
+    for doc in mydocs:
+        for author in doc["authors"]:
+            matching = bool(pattern.match(author))
+            if (matching):  # If author name matches regex pattern
+                if author in numPublications:
+                    numPublications[author] += 1
+                else:
+                    numPublications[author] = 1
+                    authors.append(author)
+    horizontal_line()
+    for i, author in enumerate(authors):
+        print(f"{i}: {author} | {numPublications[author]}")
+    print("Select author: index + ENTER")
+    print("Main Screen: ENTER")
+    index = input("Command: ")
+    selectAuthor(index, authors, dblp)
 
 
 
