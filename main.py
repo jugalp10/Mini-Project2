@@ -154,7 +154,10 @@ Main Screen: ENTER""")
 
 
 def searchForAuthors(dblp):
-    pass
+    clear()
+    print("Type in a keyword.")
+    keyword = input("Keyword: ")
+
 
 
 def listTheVenues(dblp):
@@ -187,13 +190,13 @@ def main():
     while True:
         choice = userInterface()
         if choice == 1:
-            searchForArticles(port)
+            searchForArticles(dblp)
         elif choice == 2:
-            searchForAuthors(port)
+            searchForAuthors(dblp)
         elif choice == 3:
-            listTheVenues(port)
+            listTheVenues(dblp)
         elif choice == 4:
-            addAnArticle(port)
+            addAnArticle(dblp)
         else:
             return
 
