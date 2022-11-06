@@ -6,3 +6,6 @@ def clear():
     elif os.name == "posix":
         os.system("clear")
     return
+
+def horizontal_line():
+    print('=' * os.get_terminal_size().columns)
