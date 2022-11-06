@@ -1,8 +1,18 @@
 import pymongo
-import json
-import os
 from clear import *
 
+#
+# This function is invoked whenever a user selects an article. The index position and the
+# list of articles are provided as input. The function will check if the index position is
+# valid. When the index position is valid all the article fields which are contained in
+# mydocs are displayed. For the references field the id, title, and year of the references
+# are extracted from the MongoDB collection dblp. Once the user is done viewing the
+# article the user is returned to the main screen.
+# @param  index   an index giving the index position of the article in mydocs.
+# @param  mydocs  a list containing all articles.
+# @param  dblp    the dblp collection created when loading the program.
+# @return
+#
 def selectArticle(index, mydocs, dblp):
     numOfDocs = len(mydocs)
     if index.isdigit():
@@ -61,6 +71,7 @@ f"""
 # user can perform. The user will then provide an integer between 1
 # and 5. The user choice will be verified before it is returned as
 # an integer
+# @return
 #
 def userInterface():
     while True:
@@ -88,11 +99,16 @@ def userInterface():
             input()
             clear()
 
-
-def searchForArticles(port):
-    myclient = pymongo.MongoClient("localhost", port)
-    db = myclient["291db"]
-    dblp = db["dblp"]
+#
+# This function searches for articles. The function first asks the user for keywords. Articles that match with all
+# the keywords the user specified are returned. A keyword match happens when the keyword is in at least one of the
+# following: title, authors, abstract, venue, and year. The matching articles are stored in a list called mydocs and
+# displayed accordingly. The user can also type in the index position of the article in the mydocs list and view the
+# selected article. Viewing the selected article invokes the selectArticle function.
+# @param  dblp  this is the MongoDB collection containing a collection of articles.
+# @return
+#
+def searchForArticles(dblp):
     clear()
     print("Type in your keywords separated by a space here.")
     keywords = [(int(row) if row.isdigit() else row) for row in input("Keywords: ").split()]
@@ -137,28 +153,22 @@ Main Screen: ENTER""")
     
 
 
-def searchForAuthors(port):
-    myclient = pymongo.MongoClient("localhost", port)
-    db = myclient["291db"]
-    dblp = db["dblp"]
+def searchForAuthors(dblp):
+    pass
 
 
-def listTheVenues(port):
-    myclient = pymongo.MongoClient("localhost", port)
-    db = myclient["291db"]
-    dblp = db["dblp"]
+def listTheVenues(dblp):
     ########################################
     # James's work starts here
     ########################################
+    pass
 
 
-def addAnArticle(port):
-    myclient = pymongo.MongoClient("localhost", port)
-    db = myclient["291db"]
-    dblp = db["dblp"]
+def addAnArticle(dblp):
     ########################################
     # Jugal's work starts here
     ########################################
+    pass
 
 
 #
@@ -169,6 +179,9 @@ def addAnArticle(port):
 def main():
     clear()
     port = int(input("Port Number: "))
+    myclient = pymongo.MongoClient("localhost", port)
+    db = myclient["291db"]
+    dblp = db["dblp"]
     clear()
 
     while True:
