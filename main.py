@@ -10,8 +10,9 @@ from clear import *
 # are extracted from the MongoDB collection dblp. Once the user is done viewing the
 # article the user is returned to the main screen.
 # @param  index   an index giving the index position of the article in mydocs.
-# @param  mydocs  a list containing all articles returned after the query.
-# @param  dblp    the dblp collection created when loading the program.
+# @param  mydocs  a list containing all articles that match with the keyword specified by
+#                 the user in the searchForArticles function.
+# @param  dblp    this is the MongoDB collection containing a collection of articles.
 # @return
 #
 def selectArticle(index, mydocs, dblp):
@@ -68,6 +69,19 @@ f"""
         return
 
 
+#
+# This function is invoked in the searchForAuthors function. When an author is displayed the
+# user can select an author and view all the articles published by that author. This function
+# displays all the articles that are published by the selected author. The function takes in
+# the parameter index and the list of authors myAuthors. Using index and myAuthors the author's
+# name is retrieved. The author's name will then be used to retrieve all the articles under the
+# author's name in dblp. The title, year, and venue of each article is displayed.
+# @param  index      this is the index position of the author's name in the myAuthors list.
+# @param  myAuthors  this is a list containing the names of all authors that match the keyword
+#                    the user specified in searchForAuthors.
+# @param  dblp       this is the MongoDB collection containing a collection of articles.
+# @return
+#
 def selectAuthor(index, myAuthors, dblp):
     clear()
     numAuthors = len(myAuthors)
@@ -181,7 +195,15 @@ Main Screen: ENTER""")
     selectArticle(index, mydocs, dblp)
     
 
-
+#
+# This function first prompts the user for a single keyword. The user's keyword will be used to search
+# for authors that match the keyword. A keyword match happens if the author's name contains the keyword.
+# All the authors from dblp that match with the keyword are printed. The author's name and the number of
+# publications are printed. The user has the option to type in the index position of the author to view
+# all the articles that the author published.
+# @param  dblp  this is the MongoDB collection containing a collection of articles.
+# @return
+#
 def searchForAuthors(dblp):
     clear()
     horizontal_line()
@@ -235,6 +257,7 @@ def addAnArticle(dblp):
 # This is the main function and it is the first function that gets invoked.
 # This function will ask the user for the port number. The port number will
 # be used to connect to the MongoDB server throughout the program.
+# @return
 #
 def main():
     clear()
