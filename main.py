@@ -243,7 +243,13 @@ def listTheVenues(dblp):
     ########################################
     # James's work starts here
     ########################################
-    pass
+    number = input("Enter a number n and see a listing of top n venues.\nNumber: ")
+    for a in dblp.aggregate( [{ "$match" : {"venue": {"$exists": "true", "$nin": [ "", "null" ]}}},
+    {"$group" : {"_id":"$venue", "Number Of Articles":{"$sum":1}, "Number Of References": {"$sum": {"$size": { "$ifNull": ["$references",[]]}}}}}, 
+    {"$project": {"_id": 0, "venue": '$_id', "Number Of Articles": 1, "Number Of References":1}}, 
+    {"$sort":{"Number Of References":-1}}, {"$limit": int(number)}]):
+        print(a)
+    input("Press ENTER to continue: ")
 
 
 def addAnArticle(dblp):
