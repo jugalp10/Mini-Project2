@@ -238,7 +238,16 @@ def searchForAuthors(dblp):
     selectAuthor(index, authors, dblp)
 
 
-
+#
+# This function first prompts the user for a number. This number will be the number of venues
+# that will be displayed. The function will first filter out any articles that do not belong
+# to a venue. After the articles are grouped together by the venue that they are in. The venue
+# title, number of articles, and number of references are projected. The function will sort
+# the venues by the number of articles. In the case of a tie the number of references will be
+# used.
+# @param  dblp  this is the MongoDB collection containing a collection of articles.
+# @return
+#
 def listTheVenues(dblp):
     number = input("Enter a number n and see a listing of top n venues.\nNumber: ")
     clear()
