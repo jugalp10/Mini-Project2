@@ -268,7 +268,11 @@ def listTheVenues(dblp):
             "Number Of Articles": 1,
             "Number Of References": 1
         }}, 
-        {"$sort": {"Number Of References": -1}}, {"$limit": int(number)}
+        {"$sort": {
+            "Number Of Articles": -1,
+            "Number Of References": -1
+        }},
+        {"$limit": int(number)}
     ]):
         horizontal_line()
         venue_name = a["venue"]
