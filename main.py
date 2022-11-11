@@ -240,16 +240,44 @@ def searchForAuthors(dblp):
 
 
 def listTheVenues(dblp):
-    ########################################
-    # James's work starts here
-    ########################################
     number = input("Enter a number n and see a listing of top n venues.\nNumber: ")
-    for a in dblp.aggregate( [{ "$match" : {"venue": {"$exists": "true", "$nin": [ "", "null" ]}}},
-    {"$group" : {"_id":"$venue", "Number Of Articles":{"$sum":1}, "Number Of References": {"$sum": {"$size": { "$ifNull": ["$references",[]]}}}}}, 
-    {"$project": {"_id": 0, "venue": '$_id', "Number Of Articles": 1, "Number Of References":1}}, 
-    {"$sort":{"Number Of References":-1}}, {"$limit": int(number)}]):
-        print(a)
+    clear()
+    horizontal_line()
+    print("Venue | Number Of Articles | Number Of References")
+    for a in dblp.aggregate([
+        # Filter out documents that do not have a venue
+        { "$match" : {"venue": {"$exists": "true", "$nin": ["", "null"]}}},
+        
+        # Group venues and
+        # count the number of articles in the venue and
+        # count the number of articles that reference the venue (duplicates are counted more than once).
+        {
+            "$group" : {
+                "_id": "$venue",
+                "Number Of Articles": {"$sum": 1},
+                "Number Of References": {"$sum": {
+                    "$size": {
+                        "$ifNull": ["$references", []]
+                    }}
+                }
+            }
+        }, 
+        {"$project": {
+            "_id": 0,
+            "venue": '$_id',
+            "Number Of Articles": 1,
+            "Number Of References": 1
+        }}, 
+        {"$sort": {"Number Of References": -1}}, {"$limit": int(number)}
+    ]):
+        horizontal_line()
+        venue_name = a["venue"]
+        num_of_articles = a["Number Of Articles"]
+        num_of_references = a["Number Of References"]
+        print(f"{venue_name} | {num_of_articles} | {num_of_references}")
+    horizontal_line()
     input("Press ENTER to continue: ")
+    clear()
 
 
 def addAnArticle(dblp):
