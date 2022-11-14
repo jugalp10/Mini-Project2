@@ -57,16 +57,20 @@ def selectArticle(index, mydocs, dblp):
 f"""
 {{
     id: {id2},
-    title: {title2},
-    year: {year2}
+    Title: {title2},
+    Year: {year2}
 }}
 """)
             horizontal_line()
             input("Press ENTER to continue: ")
+            return True
         else:
-            return
+            # The user types in an invalid index.
+            input("Index position is out of range. Press ENTER to try again: ")
+            return True
     else:
-        return
+        # The user chooses to exit the Search For Articles interface.
+        return False
 
 
 #
@@ -102,8 +106,12 @@ def selectAuthor(index, myAuthors, dblp):
                 print(f"{title} | {year} | {venue}")
                 horizontal_line()
             input("Press ENTER to continue: ")
+            return True
+        else:
+            input("Index position is out of range. Press ENTER to try again: ")
+            return True
     else:
-        return
+        return False
 
 
 #
@@ -177,22 +185,27 @@ def searchForArticles(dblp):
     mydocs = []
     for x in dblp.find(query):
         mydocs.append(x)
-    clear()
-    horizontal_line()
-    print("index: id | title | year | venue")
-    horizontal_line()
-    for i, x in enumerate(mydocs):
-        id = x["id"] if "id" in x else ""
-        title = x["title"] if "title" in x else ""
-        year = x["year"] if "year" in x else ""
-        venue = x["venue"] if "venue" in x else ""
-        print(f"{i}: {id} | {title} | {year} | {venue}")
+    while True:
+        clear()
         horizontal_line()
-    print(
+        print("index: id | title | year | venue")
+        horizontal_line()
+        for i, x in enumerate(mydocs):
+            id = x["id"] if "id" in x else ""
+            title = x["title"] if "title" in x else ""
+            year = x["year"] if "year" in x else ""
+            venue = x["venue"] if "venue" in x else ""
+            print(f"{i}: {id} | {title} | {year} | {venue}")
+            horizontal_line()
+        print(
 """Select article: index + ENTER
-Main Screen: ENTER""")
-    index = input("Command: ")
-    selectArticle(index, mydocs, dblp)
+Main Screen: ENTER"""
+        )
+        index = input("Command: ")
+        if selectArticle(index, mydocs, dblp):
+            pass
+        else:
+            break
     
 
 #
@@ -229,13 +242,18 @@ def searchForAuthors(dblp):
                 else:
                     numPublications[author] = 1
                     authors.append(author)
-    horizontal_line()
-    for i, author in enumerate(authors):
-        print(f"{i}: {author} | {numPublications[author]}")
-    print("Select author: index + ENTER")
-    print("Main Screen: ENTER")
-    index = input("Command: ")
-    selectAuthor(index, authors, dblp)
+    while True:
+        horizontal_line()
+        print("index: Author Name | Number of Publications")
+        for i, author in enumerate(authors):
+            print(f"{i}: {author} | {numPublications[author]}")
+        print("Select author: index + ENTER")
+        print("Main Screen: ENTER")
+        index = input("Command: ")
+        if selectAuthor(index, authors, dblp):
+            pass
+        else:
+            break
 
 
 #
