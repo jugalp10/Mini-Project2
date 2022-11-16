@@ -53,14 +53,11 @@ def selectArticle(index, mydocs, dblp):
                 id2 = ref["id"]
                 title2 = ref["title"]
                 year2 = ref["year"]
+                print('-' * os.get_terminal_size().columns)
                 print(
-f"""
-{{
-    id: {id2},
+f"""    id: {id2},
     Title: {title2},
-    Year: {year2}
-}}
-""")
+    Year: {year2}""")
             horizontal_line()
             input("Press ENTER to continue: ")
             return True
@@ -144,7 +141,7 @@ def userInterface():
         elif choice == "5":
             return 5
         else:
-            print("Your input is invalid. Press ENTER to continue.")
+            print("Your input is invalid. Press ENTER to try again.")
             input()
             clear()
 
@@ -158,14 +155,16 @@ def userInterface():
 # @return
 #
 def searchForArticles(dblp):
-    clear()
-    horizontal_line()
-    print("Type in your keywords separated by a space here.")
-    keywords = [(int(row) if row.isdigit() else row) for row in input("Keywords: ").split()]
-    if len(keywords) <= 0:
-        print("Not enough keywords. Press ENTER to continue.")
-        input()
-        return
+    while True:
+        clear()
+        horizontal_line()
+        print("Type in your keywords separated by a space here.")
+        keywords = [(int(row) if row.isdigit() else row) for row in input("Keywords: ").split()]
+        if len(keywords) == 0:
+            print("Not enough keywords. Press ENTER to try again.")
+            input()
+        else:
+            break
 
     query = {
         "$and": []
