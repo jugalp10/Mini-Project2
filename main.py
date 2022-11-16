@@ -217,10 +217,15 @@ Main Screen: ENTER"""
 # @return
 #
 def searchForAuthors(dblp):
-    clear()
-    horizontal_line()
-    print("Type in a keyword.")
-    keyword = input("Keyword: ")
+    while True:
+        clear()
+        horizontal_line()
+        print("Type in a keyword.")
+        keyword = input("Keyword: ")
+        if keyword == "":
+            input("You did not specify a keyword. Press ENTER to try again.")
+        else:
+            break
     query = {
         "authors": {"$regex": f"^.*{keyword}.*$", "$options": "i"}
     }
@@ -242,10 +247,13 @@ def searchForAuthors(dblp):
                     numPublications[author] = 1
                     authors.append(author)
     while True:
+        clear()
         horizontal_line()
         print("index: Author Name | Number of Publications")
         for i, author in enumerate(authors):
+            horizontal_line()
             print(f"{i}: {author} | {numPublications[author]}")
+        horizontal_line()
         print("Select author: index + ENTER")
         print("Main Screen: ENTER")
         index = input("Command: ")
