@@ -274,8 +274,18 @@ def searchForAuthors(dblp):
 # @return
 #
 def listTheVenues(dblp):
-    number = input("Enter a number n and see a listing of top n venues.\nNumber: ")
-    clear()
+    while True:
+        clear()
+        number = input("Enter a number n and see a listing of top n venues.\nNumber: ")
+        if number.isdigit():
+            number = int(number)
+            if number > 0:
+                break
+            else:
+                input("The number must be greater than 0. Press ENTER to continue.")
+        else:
+            input("Please enter a number. Press ENTER to continue.")
+        clear()
     horizontal_line()
     print("Venue | Number Of Articles | Number Of References")
     for a in dblp.aggregate([
