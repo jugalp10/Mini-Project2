@@ -1,5 +1,7 @@
 import pymongo
+from pymongo import TEXT
 import json
+import os
 
 
 #
@@ -17,17 +19,23 @@ def main():
     fileName += ".json"
     port = int(input("Port Number: "))
 
+    query = f"mongoimport --port {port} --db 291db --collection dblp --drop --batchSize 10000 --file {fileName}"
+    os.system(query)
+
     myclient = pymongo.MongoClient("localhost", port)
     db = myclient["291db"]
-    db["dblp"].drop()
     dblp = db["dblp"]
-
-    data = []
-    with open(fileName, "r") as f:
-        for line in f:
-            data.append(json.loads(line.strip()))
-
-    dblp.insert_many(data)
+    dblp.aggregate([
+        {"$addFields": {"year_str": {"$toString": "$year"}}},
+        {"$out": "dblp"}
+    ])
+    dblp.create_index([
+        ("title", TEXT),
+        ("authors", TEXT),
+        ("abstract", TEXT),
+        ("venue", TEXT),
+        ("year_str", TEXT)
+    ])
 
 
 if __name__ == "__main__":
