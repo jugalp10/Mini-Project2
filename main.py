@@ -293,35 +293,97 @@ def listTheVenues(dblp):
             input("Please enter a number. Press ENTER to continue.")
         clear()
 
-    for a in dblp.aggregate([
-        {"$match" : {
+    clear()
+    print("Venue | Number of Articles | Number of References")
+    for x in dblp.aggregate([
+        # Filter out any documents without venues
+        {"$match": {
             "venue": {
                 "$exists": "true",
                 "$nin": ["", "null"]
             }
         }},
-        {"$group" : {
-            "_id": "$venue",
-            "Number Of Articles": {"$sum": 1},
-            "Number Of References": {"$sum": "$n_citation"}
+        # Join each article (a1) with another article (a2) where
+        # a1.id in a2.references
+        {"$lookup": {
+            "from": "dblp",
+            "localField": "id",
+            "foreignField": "references",
+            "as": "second"
         }},
+        # The second field is an array of articles. Unwind them.
+        # preserveNullAndEmptyArrays is because some articles may
+        # not have another article reference it. For these articles,
+        # we still want to preserve them for the next pipeline.
+        {"$unwind": {
+            "path": "$second",
+            "preserveNullAndEmptyArrays": True
+        }},
+        # This grouping essentially gets rid of any duplicates.
+        {"$group": {
+            "_id": {
+                "venue": "$venue",
+                "id": "$id",
+                "ref": "$second.id"
+            }
+        }},
+        # For each article count the number of references.
+        {"$group": {
+            "_id": {
+                "venue": "$_id.venue",
+                "id": "$_id.id"
+            },
+            "Number Of References": {
+                "$sum": {
+                    # If the ref field does not exist add 0 else add 1
+                    "$cond": [
+                        {"$eq": [
+                            {
+                                "$type": "$_id.ref"
+                            },
+                            "missing"
+                        ]},
+                        0,
+                        1
+                    ]
+                }
+            }
+        }},
+        # Count the number of articles in each venue. Also count
+        # the number of references in each venue.
+        {"$group": {
+            "_id": {
+                "venue": "$_id.venue"
+            },
+            "Number Of Articles": {
+                "$sum": 1
+            },
+            "Number Of References": {
+                "$sum": "$Number Of References"
+            }
+        }},
+        # Simple projection
         {"$project": {
             "_id": 0,
-            "venue": '$_id',
+            "venue": "$_id.venue",
             "Number Of Articles": 1,
             "Number Of References": 1
         }},
+        # Sort by number of references first in descending order.
+        # If tie then sort by number of articles in descending order.
+        # If tie then sort alphabetically in ascending order.
         {"$sort": {
             "Number Of References": -1,
             "Number Of Articles": -1,
             "venue": 1
         }},
+        # Only show the top n venues.
         {"$limit": number}
     ]):
         horizontal_line()
-        venue_name = a["venue"]
-        num_of_articles = a["Number Of Articles"]
-        num_of_references = a["Number Of References"]
+        venue_name = x["venue"]
+        num_of_articles = x["Number Of Articles"]
+        num_of_references = x["Number Of References"]
         print(f"{venue_name} | {num_of_articles} | {num_of_references}")
     horizontal_line()
     input("Press ENTER to continue: ")
