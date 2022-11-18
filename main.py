@@ -89,12 +89,28 @@ def selectAuthor(index, myAuthors, dblp):
     if index.isdigit():
         index = int(index)
         if index >= 0 and index < numAuthors:
-            query = {"authors": {"$regex": f"^{myAuthors[index]}$", "$options": "i"}}
+            authorName = myAuthors[index]
+            # query = {"authors": {"$regex": f"^{myAuthors[index]}$", "$options": "i"}}
             listOfArticles = []
-            for doc in dblp.find(query):
-                listOfArticles.append(doc)
-            clear()
-            listOfArticles.sort(key=lambda x: x.get("year"), reverse=True)
+            # for doc in dblp.find(query):
+            #     listOfArticles.append(doc)
+            # clear()
+            # listOfArticles.sort(key=lambda x: x.get("year"), reverse=True)
+            for article in dblp.aggregate([
+                {"$match": {
+                    "authors": authorName
+                }},
+                {"$project": {
+                    "_id": 0,
+                    "title": 1,
+                    "year": 1,
+                    "venue": 1
+                }},
+                {"$sort": {
+                    "year": -1
+                }}
+            ]):
+                listOfArticles.append(article)
             horizontal_line()
             for article in listOfArticles:
                 title = article["title"] if "title" in article else ""
@@ -159,28 +175,18 @@ def searchForArticles(dblp):
         clear()
         horizontal_line()
         print("Type in your keywords separated by a space here.")
-        keywords = [(int(row) if row.isdigit() else row) for row in input("Keywords: ").split()]
-        if len(keywords) == 0:
+        keywords = input("Keywords: ")
+        if len(keywords.split()) == 0:
             print("Not enough keywords. Press ENTER to try again.")
             input()
         else:
             break
 
     query = {
-        "$and": []
+        "$text": {
+            "$search": keywords
+        }
     }
-    for key in keywords:
-        query["$and"].append(
-            {
-                "$or": [
-                    {"title": {"$regex": f"^.*{key}.*$", "$options": "i"}},
-                    {"authors": {"$regex": f"^.*{key}.*$", "$options": "i"}},
-                    {"abstract": {"$regex": f"^.*{key}.*$", "$options": "i"}},
-                    {"venue": {"$regex": f"^.*{key}.*$", "$options": "i"}},
-                    {"year": key}
-                ]
-            }
-        )
     mydocs = []
     for x in dblp.find(query):
         mydocs.append(x)
@@ -227,7 +233,7 @@ def searchForAuthors(dblp):
         else:
             break
     query = {
-        "authors": {"$regex": f"^.*{keyword}.*$", "$options": "i"}
+        "authors": {"$regex": f".*\\b{keyword}\\b.*", "$options": "i"}
     }
     mydocs = []
     numPublications = {}  # This dictionary stores the number of publications by each author
