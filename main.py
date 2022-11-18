@@ -286,37 +286,31 @@ def listTheVenues(dblp):
         else:
             input("Please enter a number. Press ENTER to continue.")
         clear()
-    horizontal_line()
-    print("Venue | Number Of Articles | Number Of References")
+
     for a in dblp.aggregate([
-        # Filter out documents that do not have a venue
-        { "$match" : {"venue": {"$exists": "true", "$nin": ["", "null"]}}},
-        
-        # Group venues and
-        # count the number of articles in the venue and
-        # count the number of articles that reference the venue (duplicates are counted more than once).
-        {
-            "$group" : {
-                "_id": "$venue",
-                "Number Of Articles": {"$sum": 1},
-                "Number Of References": {"$sum": {
-                    "$size": {
-                        "$ifNull": ["$references", []]
-                    }}
-                }
+        {"$match" : {
+            "venue": {
+                "$exists": "true",
+                "$nin": ["", "null"]
             }
-        }, 
+        }},
+        {"$group" : {
+            "_id": "$venue",
+            "Number Of Articles": {"$sum": 1},
+            "Number Of References": {"$sum": "$n_citation"}
+        }},
         {"$project": {
             "_id": 0,
             "venue": '$_id',
             "Number Of Articles": 1,
             "Number Of References": 1
-        }}, 
+        }},
         {"$sort": {
             "Number Of Articles": -1,
-            "Number Of References": -1
+            "Number Of References": -1,
+            "venue": 1
         }},
-        {"$limit": int(number)}
+        {"$limit": number}
     ]):
         horizontal_line()
         venue_name = a["venue"]
