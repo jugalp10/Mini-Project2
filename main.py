@@ -306,8 +306,8 @@ def listTheVenues(dblp):
             "Number Of References": 1
         }},
         {"$sort": {
-            "Number Of Articles": -1,
             "Number Of References": -1,
+            "Number Of Articles": -1,
             "venue": 1
         }},
         {"$limit": number}
