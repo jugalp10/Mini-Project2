@@ -309,6 +309,12 @@ def listTheVenues(dblp):
             "foreignField": "references",
             "as": "second"
         }},
+        {"$project": {
+            "_id": 1,
+            "venue": "$venue",
+            "id": "$id",
+            "second": "$second"
+        }},
         # For each article count the number of references.
         {"$group": {
             "_id": {
