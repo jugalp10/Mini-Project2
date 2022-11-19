@@ -167,13 +167,12 @@ def searchForArticles(dblp):
         clear()
         horizontal_line()
         print("Type in your keywords separated by a space here.")
-        keywords = input("Keywords: ").split()
+        keywords = [f"\"{word}\"" for word in input("Keywords: ").split()]
         if len(keywords) == 0:
             print("Not enough keywords. Press ENTER to try again.")
             input()
         else:
             break
-
     query = {
         "$text": {
             "$search": f"{' '.join(keywords)}"
