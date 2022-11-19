@@ -46,10 +46,7 @@ def selectArticle(index, mydocs, dblp):
             query = {
                 "id": {"$in": references}
             }
-            pretty_references = []
-            for x in dblp.find(query):
-                pretty_references.append(x)
-            for ref in pretty_references:
+            for ref in dblp.find(query):
                 id2 = ref["id"]
                 title2 = ref["title"]
                 year2 = ref["year"]
