@@ -19,7 +19,7 @@ def main():
     fileName += ".json"
     port = int(input("Port Number: "))
 
-    query = f"mongoimport --port {port} --db 291db --collection dblp --drop --batchSize 10000 --file {fileName}"
+    query = f"mongoimport --port {port} --db 291db --collection dblp --drop --batchSize 15000 --file {fileName}"
     os.system(query)
 
     myclient = pymongo.MongoClient("localhost", port)
@@ -29,13 +29,22 @@ def main():
         {"$addFields": {"year_str": {"$toString": "$year"}}},
         {"$out": "dblp"}
     ])
-    dblp.create_index([
-        ("title", TEXT),
-        ("authors", TEXT),
-        ("abstract", TEXT),
-        ("venue", TEXT),
-        ("year_str", TEXT)
-    ])
+    dblp.create_index(
+        keys = [
+            ("title", TEXT),
+            ("authors", TEXT),
+            ("abstract", TEXT),
+            ("venue", TEXT),
+            ("year_str", TEXT)
+        ],
+        default_language='none'
+    )
+    dblp.create_index(
+        keys = [
+            ("references", 1)
+        ],
+        default_language='none'
+    )
 
 
 if __name__ == "__main__":

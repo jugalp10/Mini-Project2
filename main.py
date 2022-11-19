@@ -20,20 +20,14 @@ def selectArticle(index, mydocs, dblp):
     if index.isdigit():
         index = int(index)
         if index >= 0 and index < numOfDocs:
-            id = mydocs[index]["id"] if "id" in mydocs[index] else ""
-            title = mydocs[index]["title"] if "title" in mydocs[index] else ""
-            authors = ", ".join(mydocs[index]["authors"] if "authors" in mydocs[index] else [])
-            abstract = mydocs[index]["abstract"] if "abstract" in mydocs[index] else ""
-            year = mydocs[index]["year"] if "year" in mydocs[index] else ""
-            venue = mydocs[index]["venue"] if "venue" in mydocs[index] else ""
-            references = mydocs[index]["references"] if "references" in mydocs[index] else []
-
-            query = {
-                "id": {"$in": references}
-            }
-            pretty_references = []
-            for x in dblp.find(query):
-                pretty_references.append(x)
+            myArticle = mydocs[index]
+            id = myArticle["id"] if "id" in myArticle else ""
+            title = myArticle["title"] if "title" in myArticle else ""
+            authors = ", ".join(myArticle["authors"] if "authors" in myArticle else [])
+            abstract = myArticle["abstract"] if "abstract" in myArticle else ""
+            year = myArticle["year"] if "year" in myArticle else ""
+            venue = myArticle["venue"] if "venue" in myArticle else ""
+            references = myArticle["references"] if "references" in myArticle else []
 
             clear()
             print(f"id: {id}")
@@ -49,6 +43,12 @@ def selectArticle(index, mydocs, dblp):
             print(f"venue: {venue}")
             horizontal_line()
             print(f"references:")
+            query = {
+                "id": {"$in": references}
+            }
+            pretty_references = []
+            for x in dblp.find(query):
+                pretty_references.append(x)
             for ref in pretty_references:
                 id2 = ref["id"]
                 title2 = ref["title"]
@@ -90,12 +90,7 @@ def selectAuthor(index, myAuthors, dblp):
         index = int(index)
         if index >= 0 and index < numAuthors:
             authorName = myAuthors[index]
-            # query = {"authors": {"$regex": f"^{myAuthors[index]}$", "$options": "i"}}
-            listOfArticles = []
-            # for doc in dblp.find(query):
-            #     listOfArticles.append(doc)
-            # clear()
-            # listOfArticles.sort(key=lambda x: x.get("year"), reverse=True)
+            horizontal_line()
             for article in dblp.aggregate([
                 {"$match": {
                     "authors": authorName
@@ -110,9 +105,6 @@ def selectAuthor(index, myAuthors, dblp):
                     "year": -1
                 }}
             ]):
-                listOfArticles.append(article)
-            horizontal_line()
-            for article in listOfArticles:
                 title = article["title"] if "title" in article else ""
                 year = article["year"] if "year" in article else ""
                 venue = article["venue"] if "venue" in article else ""
@@ -175,8 +167,8 @@ def searchForArticles(dblp):
         clear()
         horizontal_line()
         print("Type in your keywords separated by a space here.")
-        keywords = input("Keywords: ")
-        if len(keywords.split()) == 0:
+        keywords = input("Keywords: ").split()
+        if len(keywords) == 0:
             print("Not enough keywords. Press ENTER to try again.")
             input()
         else:
@@ -184,32 +176,30 @@ def searchForArticles(dblp):
 
     query = {
         "$text": {
-            "$search": keywords
+            "$search": f"{' '.join(keywords)}"
         }
     }
     mydocs = []
-    for x in dblp.find(query):
-        mydocs.append(x)
     while True:
         clear()
         horizontal_line()
         print("index: id | title | year | venue")
         horizontal_line()
-        for i, x in enumerate(mydocs):
+        i = 0
+        for x in dblp.find(query):
             id = x["id"] if "id" in x else ""
             title = x["title"] if "title" in x else ""
             year = x["year"] if "year" in x else ""
             venue = x["venue"] if "venue" in x else ""
             print(f"{i}: {id} | {title} | {year} | {venue}")
             horizontal_line()
+            mydocs.append(x)
+            i += 1
         print(
 """Select article: index + ENTER
 Main Screen: ENTER"""
         )
-        index = input("Command: ")
-        if selectArticle(index, mydocs, dblp):
-            pass
-        else:
+        if not selectArticle(input("Command: "), mydocs, dblp):
             break
     
 
@@ -232,40 +222,52 @@ def searchForAuthors(dblp):
             input("You did not specify a keyword. Press ENTER to try again.")
         else:
             break
-    query = {
-        "authors": {"$regex": f".*\\b{keyword}\\b.*", "$options": "i"}
-    }
-    mydocs = []
-    numPublications = {}  # This dictionary stores the number of publications by each author
     authors = []
-    # that gets returned from the MongoDB database.
-    for x in dblp.find(query, {"authors": 1, "_id": 0}):
-        mydocs.append(x)
-    clear()
-    pattern = re.compile(f"(?i)^.*{keyword}.*$")
-    for doc in mydocs:
-        for author in doc["authors"]:
-            matching = bool(pattern.match(author))
-            if (matching):  # If author name matches regex pattern
-                if author in numPublications:
-                    numPublications[author] += 1
-                else:
-                    numPublications[author] = 1
-                    authors.append(author)
     while True:
         clear()
         horizontal_line()
         print("index: Author Name | Number of Publications")
-        for i, author in enumerate(authors):
+        i = 0
+        for author in dblp.aggregate([
+            # Filter out articles that don't contain an author matching keyword
+            {"$match": {
+                "$text": {
+                    "$search": f"{keyword}"
+                }
+            }},
+            # Unwind remaining articles
+            {"$unwind": "$authors"},
+            # Filter out authors not matching keyword
+            {"$match": {
+                "authors": {
+                    "$regex": f".*\\b{keyword}\\b.*",
+                    "$options": "i"
+                }
+            }},
+            # Count the number of publications by remaining authors
+            {"$group": {
+                "_id": "$authors",
+                "Number Of Publications": {
+                    "$sum": 1
+                }
+            }},
+            # Simple projection
+            {"$project": {
+                "_id": 0,
+                "authorName": "$_id",
+                "Number Of Publications": 1
+            }}
+        ]):
             horizontal_line()
-            print(f"{i}: {author} | {numPublications[author]}")
+            authorName = author["authorName"]
+            numPublications = author["Number Of Publications"]
+            print(f"{i}: {authorName} | {numPublications}")
+            authors.append(authorName)
+            i += 1
         horizontal_line()
         print("Select author: index + ENTER")
         print("Main Screen: ENTER")
-        index = input("Command: ")
-        if selectAuthor(index, authors, dblp):
-            pass
-        else:
+        if not selectAuthor(input("Command: "), authors, dblp):
             break
 
 
@@ -311,55 +313,20 @@ def listTheVenues(dblp):
             "foreignField": "references",
             "as": "second"
         }},
-        # The second field is an array of articles. Unwind them.
-        # preserveNullAndEmptyArrays is because some articles may
-        # not have another article reference it. For these articles,
-        # we still want to preserve them for the next pipeline.
-        {"$unwind": {
-            "path": "$second",
-            "preserveNullAndEmptyArrays": True
-        }},
-        # This grouping essentially gets rid of any duplicates.
-        {"$group": {
-            "_id": {
-                "venue": "$venue",
-                "id": "$id",
-                "ref": "$second.id"
-            }
-        }},
         # For each article count the number of references.
         {"$group": {
             "_id": {
-                "venue": "$_id.venue",
-                "id": "$_id.id"
-            },
-            "Number Of References": {
-                "$sum": {
-                    # If the ref field does not exist add 0 else add 1
-                    "$cond": [
-                        {"$eq": [
-                            {
-                                "$type": "$_id.ref"
-                            },
-                            "missing"
-                        ]},
-                        0,
-                        1
-                    ]
-                }
-            }
-        }},
-        # Count the number of articles in each venue. Also count
-        # the number of references in each venue.
-        {"$group": {
-            "_id": {
-                "venue": "$_id.venue"
+                "venue": "$venue",
             },
             "Number Of Articles": {
                 "$sum": 1
             },
             "Number Of References": {
-                "$sum": "$Number Of References"
+                "$sum": {
+                    "$size": {
+                        "$ifNull": ["$second", []]
+                    }
+                }
             }
         }},
         # Simple projection
