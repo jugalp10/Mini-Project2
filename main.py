@@ -354,10 +354,58 @@ def listTheVenues(dblp):
 
 
 def addAnArticle(dblp):
-    ########################################
-    # Jugal's work starts here
-    ########################################
-    pass
+    while True:
+        # Get the ID
+        clear()
+        id = input("Provide a unique ID here: ")
+        i = 0
+        for _ in dblp.aggregate([
+            {"$match": {
+                "venue": f"{id}"
+            }},
+            {"$limit": 1}
+        ]):
+            i += 1
+        if i > 0:
+            input("ID already exists. Press ENTER to continue: ")
+        else:
+            break
+    # Get the title
+    clear()
+    title = input("Provide a title here: ")
+    # Get the list of authors
+    authors = []
+    while True:
+        clear()
+        print("Would you like to add an author.")
+        print("Type Y to add an author.")
+        if input("Otherwise type anything else to continue: ") == 'Y':
+            authors.append(input("Type in the author name: "))
+            print("Author added successfully.")
+            input("Press ENTER to continue: ")
+        else:
+            break
+    clear()
+    while True:
+        year = input("Provide a year here: ")
+        if year.isdigit():
+            year = int(year)
+            break
+        else:
+            input("Invalid input for year. Press ENTER to try again: ")
+    dblp.insert_one({
+        "abstract": None,
+        "authors": authors,
+        "n_citation": 0,
+        "references": [],
+        "title": title,
+        "venue": None,
+        "year": year,
+        "id": id
+    })
+    clear()
+    input("Successfully added article. Press ENTER to continue: ")
+
 
 
 #
